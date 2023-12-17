@@ -14,7 +14,6 @@ LABEL maintainer="Orkes OSS <oss@orkes.io>"
 
 
 # Install dependencies
-RUN apk add openjdk17
 RUN apk add git
 RUN apk add --update nodejs npm yarn
 
@@ -27,11 +26,14 @@ RUN ls -ltr
 RUN echo "Done building UI"
 
 # Checkout the community project
+FROM eclipse-temurin:17-jdk AS server-builder
 WORKDIR /
 RUN mkdir server-build
 WORKDIR  server-build
 RUN ls -ltr
 
+RUN apt-get update -y
+RUN apt-get install git -y
 RUN git clone https://github.com/conductor-oss/conductor-community.git
 
 # Copy the project directly onto the image
@@ -39,7 +41,7 @@ WORKDIR conductor-community
 RUN ls -ltr
 
 # Build the server on run
-RUN ./gradlew build -x test --stacktrace
+RUN ./gradlew build -x test --no-daemon --stacktrace
 WORKDIR /server-build
 RUN ls -ltr
 RUN pwd
@@ -61,7 +63,7 @@ RUN mkdir -p /app/config /app/logs /app/libs
 # Copy the compiled output to new image
 COPY docker/server/bin /app
 COPY docker/server/config /app/config
-COPY --from=builder /server-build/conductor-community/community-server/build/libs/*boot*.jar /app/libs/conductor-server.jar
+COPY --from=server-builder /server-build/conductor-community/community-server/build/libs/*boot*.jar /app/libs/conductor-server.jar
 
 # Copy compiled UI assets to nginx www directory
 WORKDIR /usr/share/nginx/html
