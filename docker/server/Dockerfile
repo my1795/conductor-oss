@@ -34,7 +34,7 @@ RUN ls -ltr
 
 RUN apt-get update -y
 RUN apt-get install git -y
-RUN git clone https://github.com/conductor-oss/conductor-community.git
+RUN git clone --branch v3.15.0 https://github.com/conductor-oss/conductor-community.git
 
 # Copy the project directly onto the image
 WORKDIR conductor-community
